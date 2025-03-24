@@ -32,7 +32,7 @@ Um scraper automatizado para baixar mutiplos capítulos do site [Slimeread](http
 ```
 - Pip para todas as dependencias:
 ```
-    pip install asyncio aiohttp selenium webdriver-manager pillow
+    pip install asyncio aiohttp selenium webdriver-manager pillow pillow-avif-plugin
 ```
 
 - Execute o script:
