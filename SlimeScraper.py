@@ -68,12 +68,12 @@ async def capturar_imagens():
     driver = webdriver.Chrome(service=service, options=options)
 
     try:
-        # Acessar a página do mangá para capturar o nome
+        
         print("\n🌐 Acessando a página do mangá para capturar o nome...")
         driver.get(URL_MANGA)
         await asyncio.sleep(3)
 
-        # Capturar nome do mangá
+        # Captura o nome do mangá
         try:
             elemento_nome = driver.find_element(By.XPATH, '//*[@id="__next"]/div/div/main/div[2]/div/div[2]/div[1]/h2')
             NOME_MANGA = elemento_nome.text.strip()
@@ -88,7 +88,7 @@ async def capturar_imagens():
         print(f"📁 Pasta criada: {PASTA_IMAGENS}")
         print(f"📄 Nome do PDF: {NOME_PDF}")
 
-        # Agora acessar o capítulo específico
+        
         while tentativas < max_tentativas:
             try:
                 tentativas += 1
@@ -96,10 +96,10 @@ async def capturar_imagens():
 
                 print("\n🌐 Acessando o capítulo...")
                 driver.get(URL)
-                await asyncio.sleep(5)  # Espera o site carregar
+                await asyncio.sleep(5)  
 
                 try:
-                    # Fechar pop-up se aparecer
+                    
                     ele = driver.find_element(By.XPATH, '//*[@id="radix-:R36m:"]/div[2]/button[1]/div')
                     if ele:
                         print("\n🛑 Pop-up apareceu, clicando para fechar...")
