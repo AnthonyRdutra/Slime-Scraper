@@ -5,11 +5,13 @@ Um scraper automatizado para baixar capítulos de mangás do [Slimeread](https:/
 
 - Baixa todas as imagens de um capítulo
 
-- Salva as imagens localmente
+- Salva as imagens localmente em uma pasta com o nome da obra
 
 - Converte as imagens para PDF automaticamente
 
 - Remove as imagens após a conversão
+
+- Cria um PDF com o nome da obra e capítulo
 
 
 
