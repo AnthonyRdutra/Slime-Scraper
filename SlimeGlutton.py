@@ -8,7 +8,8 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from PIL import Image  
-
+import pillow_avif
+import aviftopng
 print(r"""
 
            ___                                      ___           ___     ___                       
@@ -31,7 +32,7 @@ URL_MANGA = input("🔗 Insira a URL do mangá: ").strip()
 match = re.search(r"manga/(\d+)/", URL_MANGA)
 if not match:
     raise ValueError("❌ Erro ao extrair ID do mangá da URL. Verifique o link inserido.")
-
+avif = False
 ID_MANGA = match.group(1)
 intervalo = input("📚 Insira o intervalo de capítulos (ex: 113-120): ").strip()
 
@@ -39,18 +40,27 @@ try:
     CAPITULO_INICIO, CAPITULO_FIM = map(int, intervalo.split('-'))
 except ValueError:
     raise ValueError("❌ Intervalo inválido. Use o formato: início-fim (ex: 113-120)")
+    
 
-async def baixar_imagem(url, nome_arquivo, pasta):
+async def baixar_imagem(url, nome_base, pasta):
+    """Baixa e salva a imagem no formato correto (JPG, PNG ou AVIF)."""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url) as response:
                 if response.status == 200:
+                    extensao = ".jpg"  # Padrão JPG
+                    if ".png" in url:
+                        extensao = ".png"
+                    elif ".avif" in url:
+                        extensao = ".avif"
+
+                    nome_arquivo = f"{nome_base}{extensao}"
                     caminho_arquivo = os.path.join(pasta, nome_arquivo)
+
                     with open(caminho_arquivo, "wb") as f:
                         f.write(await response.read())
+
                     print(f"✅ Imagem salva: {caminho_arquivo}")
-                else:
-                    print(f"❌ Erro ao baixar {url}: {response.status}")
     except Exception as e:
         print(f"❌ Falha ao baixar {url}: {e}")
 
@@ -113,7 +123,64 @@ async def capturar_imagens(capitulo, pasta_imagens):
     finally:
         driver.quit()
 
+
+def aviftopng(input_folder):
+    """
+    Converte todos os arquivos AVIF para PNG na pasta especificada.
+    """
+    for filename in os.listdir(input_folder):
+        if filename.lower().endswith(".avif"):
+            avif_path = os.path.join(input_folder, filename)
+            png_path = os.path.join(input_folder, filename.replace(".avif", ".png"))
+            temp_png_path = png_path + ".tmp"  # Arquivo temporário para evitar corrupção
+            
+            try:
+                with Image.open(avif_path) as img:
+                    img.convert("RGB").save(temp_png_path, "PNG")  # Salva como PNG
+                os.replace(temp_png_path, png_path)  # Substituir apenas se a conversão for bem-sucedida
+                os.remove(avif_path)  # Excluir o arquivo AVIF após conversão
+                print(f"Converted and deleted: {filename} -> {png_path}")
+            except Exception as e:
+                if os.path.exists(temp_png_path):
+                    os.remove(temp_png_path)  # Remover arquivo temporário se houver falha
+                print(f"Failed to convert {filename}: {e}")
+
+def convert_avif_to_png(input_folder, output_folder):
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    for filename in os.listdir(input_folder):
+        if filename.lower().endswith(".avif"):
+            avif_path = os.path.join(input_folder, filename)
+            png_path = os.path.join(output_folder, filename.replace(".avif", ".png"))
+            temp_png_path = png_path + ".tmp"  # Arquivo temporário para evitar corrupção
+            
+            try:
+                with Image.open(avif_path) as img:
+                    img.convert("RGB").save(temp_png_path, "PNG")  # Salva como PNG
+                os.replace(temp_png_path, png_path)  # Substituir apenas se a conversão for bem-sucedida
+                os.remove(avif_path)  # Excluir o arquivo AVIF após conversão
+                print(f"Converted and deleted: {filename} -> {png_path}")
+            except Exception as e:
+                if os.path.exists(temp_png_path):
+                    os.remove(temp_png_path)  # Remover arquivo temporário se houver falha
+                print(f"Failed to convert {filename}: {e}")
+
+                # Chama a função aviftopng se o arquivo salvo for AVIF
+                if filename.lower().endswith(".avif"):
+                    print(f"Calling aviftopng() for directory {input_folder}")
+
+def verificar_imagens_avif(pasta):
+    """Verifica se existem imagens no formato .avif em uma pasta."""
+    for arquivo in os.listdir(pasta):
+        if arquivo.lower().endswith(".avif"):
+            print(f"✅ Encontrado arquivo AVIF: {arquivo}")
+            convert_avif_to_png(pasta, pasta)
+    print("❌ Nenhum arquivo AVIF encontrado.")
+    return False  # Se não encontrar nenhum arquivo AVIF
+
 def imagens_para_pdf(pasta_imagens, nome_pdf):
+    verificar_imagens_avif(pasta_imagens)
     print(f"\n📄 Convertendo imagens para PDF: {nome_pdf}")
     arquivos = sorted(
         [f for f in os.listdir(pasta_imagens) if f.startswith("pagina_") and (f.endswith(".jpg") or f.endswith(".png"))],
