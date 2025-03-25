@@ -9,7 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from PIL import Image  
 import pillow_avif
-import aviftopng
+
 print(r"""
 
            ___                                      ___           ___     ___                       
